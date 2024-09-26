@@ -1,53 +1,67 @@
-# Use a Windows Server image
-FROM mcr.microsoft.com/windows/nanoserver:ltsc2022
-
-# Install Python
-RUN powershell.exe -Command \
-    wget https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe -OutFile python-3.12.0-amd64.exe; \
-    Start-Process python-3.12.0-amd64.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait; \
-    Remove-Item -Force python-3.12.0-amd64.exe
-
-# Upgrade pip
-RUN python -m pip install --upgrade pip
+ARG PYTHON_VERSION=3.12-slim-bullseye
+FROM python:${PYTHON_VERSION}
 
 # Create a virtual environment
 RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/Scripts:${PATH}"
 
-# Copy the dlib .whl file
-COPY ./dlib-19.24.99-cp312-cp312-win_amd64.whl /tmp/
+# Set the virtual environment as the current location
+ENV PATH=/opt/venv/bin:$PATH
 
-# Install the dlib package
-RUN pip install /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
+# Upgrade pip
+RUN pip install --upgrade pip
 
-# Copy other necessary files, like requirements.txt
-COPY requirements.txt /tmp/requirements.txt
+# Set Python-related environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Install the remaining Python dependencies
-RUN pip install -r /tmp/requirements.txt
+# Install OS dependencies for building dlib and other libraries
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    libjpeg-dev \
+    libcairo2 \
+    gcc \
+    cmake \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy your source code
-COPY ./drowsiness_detection_project /code
+# Create the mini VM's code directory
+RUN mkdir -p /code
+
+# Set the working directory to that same code directory
 WORKDIR /code
 
-# Set environment variables for Django
+# Copy the requirements file into the container
+COPY requirements.txt /tmp/requirements.txt
+
+# Install the Python project requirements (without dlib)
+RUN pip install -r /tmp/requirements.txt
+
+# Clone the dlib repository
+RUN git clone https://github.com/davisking/dlib.git
+
+# Checkout the specific version
+WORKDIR /code/dlib
+RUN git checkout tags/v19.24.01
+
+# Build and install dlib
+RUN python setup.py install
+
+# Set up environment variables for Django
 ARG DJANGO_SECRET_KEY
 ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
 ARG DJANGO_DEBUG=0
 ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 
-# Run commands that do not require the database
-RUN python manage.py collectstatic --noinput
-
-# Set the Django default project name
-ARG PROJ_NAME="safedrive"
+# Database isn't available during build; run other commands like collectstatic
+RUN python /code/manage.py collectstatic --noinput
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
     printf "RUN_PORT=\"\${PORT:-8000}\"\n\n" >> ./paracord_runner.sh && \
     printf "python manage.py migrate --no-input\n" >> ./paracord_runner.sh && \
-    printf "gunicorn ${PROJ_NAME}.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
+    printf "gunicorn SafeAI.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
 
 # Make the bash script executable
 RUN chmod +x paracord_runner.sh
