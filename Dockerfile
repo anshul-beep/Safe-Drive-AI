@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     gcc \
     cmake \
-    git \
+    libglib2.0-0 \
+    libgthread-2.0-0 \
     build-essential \
     libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
