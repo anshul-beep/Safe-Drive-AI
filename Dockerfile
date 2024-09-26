@@ -32,7 +32,7 @@ WORKDIR /code
 COPY requirements.txt /tmp/requirements.txt
 
 # Copy the project code into the container's working directory
-COPY ./drowsiness_detection_project/code
+COPY ./drowsiness_detection_project /code
 
 # Copy the face detection model .dat file
 COPY ./drowsiness_detection_project/models/shape_predictor_68_face_landmarks.dat /code/models/
