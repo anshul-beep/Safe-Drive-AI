@@ -1,6 +1,7 @@
 Django>=5.0,<5.1
+gunicorn
 channels
-numpy
+numpy==1.26.3
 django-allauth[socialaccount]
 opencv-python
 imutils
@@ -9,3 +10,4 @@ dlib-19.24.99-cp312-cp312-win_amd64.whl
 scipy
 playsound==1.2.2
 camera
+decouple
