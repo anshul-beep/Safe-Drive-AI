@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial import distance
 import os
 from django.conf import settings
-import winsound  # For sound alerts on Windows
+import pygame  # For sound alerts on Windows
 
 def eye_aspect_ratio(eye):
     A = distance.euclidean(eye[1], eye[5])
@@ -87,8 +87,9 @@ class DrowsinessDetector:
     def alert(self):
         # Visual alert in the frame (this should be done in the view, not here)
         print("Drowsiness detected! Activating alarm...")
-        # Sound alert
-        frequency = 2500  # Set Frequency To 2500 Hertz
-        duration = 1000   # Set Duration To 1000 ms == 1 second
-        winsound.Beep(frequency, duration)  # Beep sound for alert
+        try:
+            pygame.mixer.music.load('models\Alert (1).wav') 
+            pygame.mixer.music.play()
+        except Exception as e:
+            print(f"Error playing sound: {e}")
 

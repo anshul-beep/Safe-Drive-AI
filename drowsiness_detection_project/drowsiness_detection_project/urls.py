@@ -21,6 +21,6 @@ from .views import about_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include("allauth.urls")),
-    path('accounts/login', about_view, name='home'), 
+    # path('accounts/login', about_view, name='home'), 
     path('', include('detection_app.urls')),
 ]
