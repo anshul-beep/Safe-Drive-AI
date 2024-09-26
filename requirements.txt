@@ -6,6 +6,6 @@ django-allauth[socialaccount]
 opencv-python
 imutils
 cmake
-dlib
+dlib==19.24.99 
 scipy
 decouple
