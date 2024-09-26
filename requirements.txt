@@ -8,4 +8,4 @@ imutils
 cmake==3.25.2
 dlib==19.24.2
 scipy
-decouple
+python-decouple
