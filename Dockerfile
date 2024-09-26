@@ -42,7 +42,7 @@ RUN git clone https://github.com/davisking/dlib.git
 
 # Checkout the specific version
 WORKDIR /code/dlib
-RUN git checkout tags/v19.24.01
+RUN git checkout tags/v19.24.00
 
 # Build and install dlib
 RUN python setup.py install
