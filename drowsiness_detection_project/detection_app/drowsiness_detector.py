@@ -16,7 +16,7 @@ def eye_aspect_ratio(eye):
 class DrowsinessDetector:
     def __init__(self):
         self.detector = dlib.get_frontal_face_detector()
-        predictor_path = os.path.join(settings.BASE_DIR, "models/shape_predictor_68_face_landmarks.dat")
+        predictor_path = os.path.join(settings.BASE_DIR, "models\shape_predictor_68_face_landmarks.dat")
         if not os.path.exists(predictor_path):
             raise FileNotFoundError(f"Predictor file not found at {predictor_path}")
         self.predictor = dlib.shape_predictor(predictor_path)
