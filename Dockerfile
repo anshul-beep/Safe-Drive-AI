@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     gcc \
     cmake \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Create the mini VM's code directory
@@ -36,12 +35,7 @@ COPY requirements.txt /tmp/requirements.txt
 # Install the Python project requirements (without dlib)
 RUN pip install -r /tmp/requirements.txt
 
-# Clone the dlib repository
-RUN git clone https://github.com/davisking/dlib.git
-
 # Checkout the specific version
-WORKDIR /code/dlib
-RUN git checkout tags/v19.24.99
 
 # Build and install dlib
 RUN python setup.py install
