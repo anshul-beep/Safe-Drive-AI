@@ -27,7 +27,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
 # Copy your source code
-COPY ./src /code
+COPY ./drowsiness_detection_project /code
 WORKDIR /code
 
 # Set environment variables for Django
@@ -41,7 +41,7 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 RUN python manage.py collectstatic --noinput
 
 # Set the Django default project name
-ARG PROJ_NAME="cfehome"
+ARG PROJ_NAME="safedrive"
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
