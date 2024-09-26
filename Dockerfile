@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     build-essential \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
 # Create the mini VM's code directory
