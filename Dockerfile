@@ -38,9 +38,6 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
 
 
-# Build and install dlib
-RUN python setup.py install
-
 # Set up environment variables for Django
 ARG DJANGO_SECRET_KEY
 ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
