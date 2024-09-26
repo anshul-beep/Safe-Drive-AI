@@ -39,6 +39,7 @@ COPY ./drowsiness_detection_project/models/shape_predictor_68_face_landmarks.dat
 
 # Copy the dlib .whl file
 COPY ./dlib-19.24.99-cp312-cp312-win_amd64.whl /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
+RUN pip install /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
 
 # Install the Python project requirements
 RUN pip install -r /tmp/requirements.txt

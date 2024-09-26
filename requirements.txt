@@ -6,8 +6,5 @@ django-allauth[socialaccount]
 opencv-python
 imutils
 cmake
-dlib-19.24.99-cp312-cp312-win_amd64.whl
 scipy
-playsound==1.2.2
-camera
 decouple
