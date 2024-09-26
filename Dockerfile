@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libcairo2 \
     gcc \
-    cmake \                # Add CMake for building dlib
+    cmake \
     && rm -rf /var/lib/apt/lists/*
 
 # Create the application code directory
