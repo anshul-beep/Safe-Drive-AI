@@ -46,7 +46,7 @@ ARG DJANGO_DEBUG=0
 ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 
 # Database isn't available during build; run other commands like collectstatic
-RUN python /code/manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
