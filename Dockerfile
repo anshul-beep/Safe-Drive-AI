@@ -1,3 +1,4 @@
+# Specify the base Python image version
 ARG PYTHON_VERSION=3.12-slim-bullseye
 FROM python:${PYTHON_VERSION}
 
@@ -14,15 +15,16 @@ RUN pip install --upgrade pip
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Install OS dependencies for our mini VM
+# Install OS dependencies for the application
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libjpeg-dev \
     libcairo2 \
     gcc \
+    cmake \                # Add CMake for building dlib
     && rm -rf /var/lib/apt/lists/*
 
-# Create the mini VM's code directory
+# Create the application code directory
 RUN mkdir -p /code
 
 # Set the working directory to that same code directory
@@ -38,8 +40,8 @@ COPY ./drowsiness_detection_project /code
 COPY ./drowsiness_detection_project/models/shape_predictor_68_face_landmarks.dat /code/models/
 
 # Copy the dlib .whl file
-COPY ./dlib-19.24.99-cp312-cp312-win_amd64.whl /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
-RUN pip install /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
+COPY ./dlib-19.24.99-cp312-cp312-win_amd64.whl /tmp/dlib.whl
+RUN pip install /tmp/dlib.whl
 
 # Install the Python project requirements
 RUN pip install -r /tmp/requirements.txt
@@ -51,8 +53,7 @@ ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 ARG DJANGO_DEBUG=0
 ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 
-# Database isn't available during build; run other commands like collectstatic
-# RUN python manage.py vendor_pull
+# Run other commands like collectstatic
 RUN python manage.py collectstatic --noinput
 
 # Set the Django default project name
@@ -74,4 +75,4 @@ RUN apt-get remove --purge -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Run the Django project via the runtime script when the container starts
-CMD ./paracord_runner.sh
+CMD ["./paracord_runner.sh"]
