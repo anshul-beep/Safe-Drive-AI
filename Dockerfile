@@ -37,6 +37,8 @@ COPY requirements.txt /tmp/requirements.txt
 # Install the Python project requirements (without dlib)
 RUN pip install -r /tmp/requirements.txt
 
+# copy the project code into the container's working directory
+COPY ./drowsiness_detection_project /code
 
 # Set up environment variables for Django
 ARG DJANGO_SECRET_KEY
@@ -47,6 +49,8 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 
 # Database isn't available during build; run other commands like collectstatic
 RUN python manage.py collectstatic --noinput
+
+ARG PROJ_NAME="cfehome"
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
