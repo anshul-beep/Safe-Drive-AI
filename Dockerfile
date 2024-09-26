@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.12-slim-bullseye
+ARG PYTHON_VERSION=3.9.1-slim-bullseye
 FROM python:${PYTHON_VERSION}
 
 # Create a virtual environment
@@ -37,12 +37,6 @@ COPY requirements.txt /tmp/requirements.txt
 # Install the Python project requirements (without dlib)
 RUN pip install -r /tmp/requirements.txt
 
-# Clone the dlib repository
-RUN git clone https://github.com/davisking/dlib.git
-
-# Checkout the specific version
-WORKDIR /code/dlib
-RUN git checkout tags/v19.24.00
 
 # Build and install dlib
 RUN python setup.py install
