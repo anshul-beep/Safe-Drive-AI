@@ -3,7 +3,7 @@ gunicorn
 channels
 numpy==1.26.3
 django-allauth[socialaccount]
-python-opencv
+opencv-python
 imutils
 cmake==3.25.2
 dlib==19.24.2
