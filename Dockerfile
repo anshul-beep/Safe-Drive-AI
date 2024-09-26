@@ -1,60 +1,53 @@
-ARG PYTHON_VERSION=3.12-slim-bullseye
-FROM python:${PYTHON_VERSION}
+# Use a Windows Server image
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+# Install Python
+RUN powershell.exe -Command \
+    wget https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe -OutFile python-3.12.0-amd64.exe; \
+    Start-Process python-3.12.0-amd64.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait; \
+    Remove-Item -Force python-3.12.0-amd64.exe
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip
 
 # Create a virtual environment
 RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/Scripts:${PATH}"
 
-# Set the virtual environment as the current location
-ENV PATH=/opt/venv/bin:$PATH
+# Copy the dlib .whl file
+COPY ./dlib-19.24.99-cp312-cp312-win_amd64.whl /tmp/
 
-# Upgrade pip
-RUN pip install --upgrade pip
+# Install the dlib package
+RUN pip install /tmp/dlib-19.24.99-cp312-cp312-win_amd64.whl
 
-# Set Python-related environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# Install OS dependencies for building dlib
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    libjpeg-dev \
-    libcairo2 \
-    gcc \
-    cmake \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create the mini VM's code directory
-RUN mkdir -p /code
-
-# Set the working directory to that same code directory
-WORKDIR /code
-
-# Copy the requirements file into the container
+# Copy other necessary files, like requirements.txt
 COPY requirements.txt /tmp/requirements.txt
 
-# Install the Python project requirements (without dlib)
+# Install the remaining Python dependencies
 RUN pip install -r /tmp/requirements.txt
 
-# Checkout the specific version
+# Copy your source code
+COPY ./src /code
+WORKDIR /code
 
-# Build and install dlib
-RUN python setup.py install
-
-# Set up environment variables for Django
+# Set environment variables for Django
 ARG DJANGO_SECRET_KEY
 ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 
 ARG DJANGO_DEBUG=0
 ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 
-# Database isn't available during build; run other commands like collectstatic
-RUN python /code/manage.py collectstatic --noinput
+# Run commands that do not require the database
+RUN python manage.py collectstatic --noinput
+
+# Set the Django default project name
+ARG PROJ_NAME="cfehome"
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
     printf "RUN_PORT=\"\${PORT:-8000}\"\n\n" >> ./paracord_runner.sh && \
     printf "python manage.py migrate --no-input\n" >> ./paracord_runner.sh && \
-    printf "gunicorn SafeAI.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
+    printf "gunicorn ${PROJ_NAME}.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
 
 # Make the bash script executable
 RUN chmod +x paracord_runner.sh
