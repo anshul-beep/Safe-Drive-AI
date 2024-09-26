@@ -50,13 +50,13 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 # Database isn't available during build; run other commands like collectstatic
 RUN python manage.py collectstatic --noinput
 
-ARG PROJ_NAME="cfehome"
+ARG PROJ_NAME=" drowsiness_detection_project"
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
     printf "RUN_PORT=\"\${PORT:-8000}\"\n\n" >> ./paracord_runner.sh && \
     printf "python manage.py migrate --no-input\n" >> ./paracord_runner.sh && \
-    printf "gunicorn SafeAI.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
+    printf "gunicorn ${PROJ_NAME}.wsgi:application --bind \"0.0.0.0:\$RUN_PORT\"\n" >> ./paracord_runner.sh
 
 # Make the bash script executable
 RUN chmod +x paracord_runner.sh
