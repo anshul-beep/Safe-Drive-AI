@@ -6,7 +6,8 @@
     <title>Advanced Drowsiness Detection System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" /> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 p-6">
@@ -14,10 +15,6 @@
         <h1 class="text-4xl font-bold mb-8 text-indigo-700 text-center">Advanced Drowsiness Detection System</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Live Feed</h2>
-                <img class="w-full h-auto border rounded-lg" src="{% url 'video_feed' %}" alt="Video Feed">
-            </div>
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Detection Controls</h2>
                 <label class="inline-flex items-center mb-4">
@@ -34,34 +31,41 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Current Location</h2>
-                <div id="location" class="text-lg text-gray-700">Fetching your current location...</div>
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Live Feed</h2>
+                <video id="videoElement" class="w-full h-auto border rounded-lg" autoplay></video>
+                <canvas id="canvasElement" style="display:none;"></canvas>
             </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Current Location</h2>
+                    <div id="location" class="text-lg text-gray-700">Fetching your current location...</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Nearby Rest Areas</h2>
+                    <div id="nearbyPlaces" class="text-lg text-gray-700">Nearby places to rest: None yet</div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Map</h2>
+                <div id="map" class="w-full h-96 bg-gray-200 rounded-lg"></div>
+            </div>
+
             <div class="bg-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Nearby Rest Areas</h2>
-                <div id="nearbyPlaces" class="text-lg text-gray-700">Nearby places to rest: None yet</div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Map</h2>
-            <div id="map" class="w-full h-96 bg-gray-200 rounded-lg"></div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Drowsiness Statistics</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-indigo-100 rounded-lg">
-                    <h3 class="text-lg font-semibold text-indigo-700">Total Drive Time</h3>
-                    <p id="totalDriveTime" class="text-2xl font-bold text-indigo-800">00:00:00</p>
-                </div>
-                <div class="p-4 bg-yellow-100 rounded-lg">
-                    <h3 class="text-lg font-semibold text-yellow-700">Drowsy Episodes</h3>
-                    <p id="drowsyEpisodes" class="text-2xl font-bold text-yellow-800">0</p>
-                </div>
-                <div class="p-4 bg-green-100 rounded-lg">
-                    <h3 class="text-lg font-semibold text-green-700">Average Alertness</h3>
-                    <p id="avgAlertness" class="text-2xl font-bold text-green-800">100%</p>
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Drowsiness Statistics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-indigo-100 rounded-lg">
+                        <h3 class="text-lg font-semibold text-indigo-700">Total Drive Time</h3>
+                        <p id="totalDriveTime" class="text-2xl font-bold text-indigo-800">00:00:00</p>
+                    </div>
+                    <div class="p-4 bg-yellow-100 rounded-lg">
+                        <h3 class="text-lg font-semibold text-yellow-700">Drowsy Episodes</h3>
+                        <p id="drowsyEpisodes" class="text-2xl font-bold text-yellow-800">0</p>
+                    </div>
+                    <div class="p-4 bg-green-100 rounded-lg">
+                        <h3 class="text-lg font-semibold text-green-700">Average Alertness</h3>
+                        <p id="avgAlertness" class="text-2xl font-bold text-green-800">100%</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -75,25 +79,106 @@
         let drowsyCount = 0;
         let totalAlertness = 100;
         let alertnessReadings = 0;
-        mapboxgl.accessToken = 'your_mapbox_access_token'; // Replace with your Mapbox token
+        mapboxgl.accessToken = 'your_mapbox_access_token';  // Replace with your Mapbox token
+        let socket;
+        let videoElement;
+        let canvasElement;
+        let canvasCtx;
+        let sendFrameInterval;
+
+        function initializeWebSocket() {
+            console.log('Attempting to connect to WebSocket...');
+            const socket = new WebSocket('wss://66b5-14-139-195-211.ngrok-free.app/ws/drowsiness/');
+
+
+            socket.onopen = function(e) {
+                console.log('Connected to WebSocket');
+            };
+
+            socket.onmessage = function(e) {
+                console.log('Received message:', e.data);
+                var data = JSON.parse(e.data);
+                if (data.type === 'drowsiness_alert') {
+                    console.log('Drowsiness detected:', data);
+                    updateAlertLevel(data.ear);
+                }
+            };
+
+            socket.onerror = function(e) {
+                console.error('WebSocket error:', e);
+            };
+
+            socket.onclose = function(e) {
+                console.log('WebSocket closed:', e.code, e.reason);
+            };
+        }
+
+        function initializeCamera() {
+            console.log('Initializing camera...');
+            videoElement = document.getElementById('videoElement');
+            canvasElement = document.getElementById('canvasElement');
+            canvasCtx = canvasElement.getContext('2d');
+
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    console.log('Camera access granted');
+                    videoElement.srcObject = stream;
+                    videoElement.play()
+                        .then(() => {
+                            console.log("Video playback started");
+                            sendFrame(); // Start sending frames when video starts playing
+                        })
+                        .catch(e => console.error("Video playback failed:", e));
+                })
+                .catch(function(err) {
+                    console.error("Camera access error:", err);
+                    alert("Failed to access the camera. Error: " + err.message);
+                });
+        }
+
+        function sendFrame() {
+            if (detectionActive && videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                canvasElement.width = videoElement.videoWidth;
+                canvasElement.height = videoElement.videoHeight;
+                canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                
+                canvasElement.toBlob(function(blob) {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(blob);
+                    } else {
+                        console.error('WebSocket is not open');
+                    }
+                }, 'image/jpeg', 0.8);
+            }
+            setTimeout(sendFrame, 200);  // Send a frame every 200ms (5 fps)
+        }
 
         function toggleDetection() {
             detectionActive = !detectionActive;
             const statusText = detectionActive ? "Detection is ON" : "Detection is OFF";
             document.getElementById('status').innerText = statusText;
 
-            if (detectionActive) {
-                startTime = new Date();
-                updateDriveTime();
-            }
-
             fetch('/toggle_detection/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}',
                 },
                 body: JSON.stringify({ active: detectionActive })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (detectionActive) {
+                        startTime = new Date();
+                        updateDriveTime();
+                        sendFrame(); // Start sending frames
+                    }
+                } else {
+                    console.error('Failed to toggle detection:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
             });
 
             if (!mapInitialized && detectionActive) {
@@ -119,9 +204,7 @@
                 fetch(`/nearby_places/?lat=${lat}&lon=${lon}`)
                     .then(response => response.json())
                     .then(data => {
-                        const places = data.places.join(", ");
-                        document.getElementById('nearbyPlaces').innerText = `Nearby places to rest: ${places}`;
-                        addMarkersToMap(lat, lon, data.places);
+                        document.getElementById('nearbyPlaces').innerText = `Nearby places: ${data.places.join(', ')}`;
                     });
             }
         }
@@ -130,52 +213,67 @@
             const map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
-                center: [78.9629, 20.5937],
-                zoom: 5
+                center: [-74.5, 40], // Starting position [lng, lat]
+                zoom: 9 // Starting zoom
             });
-
-            map.addControl(new mapboxgl.NavigationControl());
         }
 
-        function addMarkersToMap(lat, lon, places) {
-            const map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [lon, lat],
-                zoom: 12
-            });
+        function updateAlertLevel(ear) {
+            let alertLevel;
+            if (ear < 0.2) {
+                alertLevel = 'Drowsy';
+                drowsyCount++;
+                document.getElementById('drowsyEpisodes').innerText = drowsyCount;
+            } else {
+                alertLevel = 'Normal';
+            }
 
-            // Add user's location marker
-            new mapboxgl.Marker({ color: "#FF0000" })
-                .setLngLat([lon, lat])
-                .addTo(map);
-
-            places.forEach((place, index) => {
-                // Add markers at the nearby rest area coordinates (dummy for now)
-                new mapboxgl.Marker({ color: "#00FF00" })
-                    .setLngLat([lon + (index * 0.01), lat + (index * 0.01)])
-                    .setPopup(new mapboxgl.Popup().setHTML(`<h3>${place}</h3>`))
-                    .addTo(map);
-            });
-
-            map.addControl(new mapboxgl.NavigationControl());
+            document.getElementById('alertLevel').innerText = `Alert Level: ${alertLevel}`;
+            updateAverageAlertness(ear);
         }
+
+        function updateAverageAlertness(ear) {
+            alertnessReadings++;
+            totalAlertness += ear * 100; // Convert to percentage
+            let avg = totalAlertness / alertnessReadings;
+            document.getElementById('avgAlertness').innerText = `${avg.toFixed(2)}%`;
+        }
+
+        function updateDriveTime() {
+            setInterval(() => {
+                if (detectionActive) {
+                    const now = new Date();
+                    const driveTime = new Date(now - startTime);
+                    const hours = String(driveTime.getUTCHours()).padStart(2, '0');
+                    const minutes = String(driveTime.getUTCMinutes()).padStart(2, '0');
+                    const seconds = String(driveTime.getUTCSeconds()).padStart(2, '0');
+                    document.getElementById('totalDriveTime').innerText = `${hours}:${minutes}:${seconds}`;
+                }
+            }, 1000);
+        }
+
+        window.onload = function() {
+            getLocation();
+            initializeWebSocket();
+            initializeCamera();
+            initAlertChart(); // Function to initialize your alert chart
+        };
 
         function initAlertChart() {
             const ctx = document.getElementById('alertChart').getContext('2d');
             alertChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [],
+                    labels: [], // Add labels dynamically
                     datasets: [{
-                        label: 'Alertness Level',
-                        data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
+                        label: 'Alert Level Over Time',
+                        data: [], // Populate with alert level data
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false,
                     }]
                 },
                 options: {
-                    responsive: true,
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -185,67 +283,6 @@
                 }
             });
         }
-
-        function updateAlertLevel() {
-            if (detectionActive) {
-                const alertLevel = Math.floor(Math.random() * 100);
-                const alertDiv = document.getElementById('alertLevel');
-                alertDiv.innerText = `Alert Level: ${alertLevel}%`;
-                
-                if (alertLevel < 30) {
-                    alertDiv.className = 'text-lg font-semibold text-red-600';
-                    drowsyCount++;
-                } else if (alertLevel < 70) {
-                    alertDiv.className = 'text-lg font-semibold text-yellow-600';
-                } else {
-                    alertDiv.className = 'text-lg font-semibold text-green-600';
-                }
-
-                updateChart(alertLevel);
-                updateStatistics(alertLevel);
-            }
-        }
-
-        function updateChart(alertLevel) {
-            const now = new Date();
-            alertChart.data.labels.push(now.toLocaleTimeString());
-            alertChart.data.datasets[0].data.push(alertLevel);
-
-            if (alertChart.data.labels.length > 10) {
-                alertChart.data.labels.shift();
-                alertChart.data.datasets[0].data.shift();
-            }
-
-            alertChart.update();
-        }
-
-        function updateDriveTime() {
-            if (detectionActive) {
-                const now = new Date();
-                const diff = now - startTime;
-                const hours = Math.floor(diff / 3600000);
-                const minutes = Math.floor((diff % 3600000) / 60000);
-                const seconds = Math.floor((diff % 60000) / 1000);
-                document.getElementById('totalDriveTime').innerText = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                setTimeout(updateDriveTime, 1000);
-            }
-        }
-
-        function updateStatistics(alertLevel) {
-            document.getElementById('drowsyEpisodes').innerText = drowsyCount;
-            
-            totalAlertness += alertLevel;
-            alertnessReadings++;
-            const avgAlertness = Math.round(totalAlertness / alertnessReadings);
-            document.getElementById('avgAlertness').innerText = `${avgAlertness}%`;
-        }
-
-        window.onload = function() {
-            getLocation();
-            initAlertChart();
-            setInterval(updateAlertLevel, 5000); // Update alert level every 5 seconds
-        };
     </script>
 </body>
 </html>

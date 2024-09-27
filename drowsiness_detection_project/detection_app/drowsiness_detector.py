@@ -88,7 +88,7 @@ class DrowsinessDetector:
         # Visual alert in the frame (this should be done in the view, not here)
         print("Drowsiness detected! Activating alarm...")
         try:
-            pygame.mixer.music.load('models\Alert (1).wav') 
+            pygame.mixer.music.load(os.path.join(settings.BASE_DIR, 'models/Alert (1).wav'))
             pygame.mixer.music.play()
         except Exception as e:
             print(f"Error playing sound: {e}")
