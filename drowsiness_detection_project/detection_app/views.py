@@ -17,7 +17,7 @@ def index(request):
     return render(request, 'detection_app/index.html')
 
 def gen_frames():
-    camera = cv2.VideoCapture(-1,cv2.CAP_V4L2)
+    camera = cv2.VideoCapture(0)
     while True:
         success, frame = camera.read()
         if not success:
