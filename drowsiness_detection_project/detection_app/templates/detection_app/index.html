@@ -88,28 +88,29 @@
 
         function initializeWebSocket() {
             console.log('Attempting to connect to WebSocket...');
-            const socket = new WebSocket('wss://66b5-14-139-195-211.ngrok-free.app/ws/drowsiness/');
+            const socket = new WebSocket('wss://b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app/ws/drowsiness/');
 
 
-            socket.onopen = function(e) {
+
+            socket.onopen = function(event) {
                 console.log('Connected to WebSocket');
             };
 
-            socket.onmessage = function(e) {
+            socket.onmessage = function(event) {
                 console.log('Received message:', e.data);
-                var data = JSON.parse(e.data);
+                var data = JSON.parse(event.data);
                 if (data.type === 'drowsiness_alert') {
                     console.log('Drowsiness detected:', data);
                     updateAlertLevel(data.ear);
                 }
             };
 
-            socket.onerror = function(e) {
-                console.error('WebSocket error:', e);
+            socket.onerror = function(event) {
+                console.error('WebSocket error:', event);
             };
 
-            socket.onclose = function(e) {
-                console.log('WebSocket closed:', e.code, e.reason);
+            socket.onclose = function(event) {
+                console.log('WebSocket closed:', event.code, event.reason);
             };
         }
 
@@ -136,17 +137,18 @@
                 });
         }
 
-        function sendFrame() {
+        function sendFrame(blob) {
             if (detectionActive && videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
                 canvasElement.width = videoElement.videoWidth;
                 canvasElement.height = videoElement.videoHeight;
                 canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
                 
                 canvasElement.toBlob(function(blob) {
-                    if (socket.readyState === WebSocket.OPEN) {
+                    if (socket && socket.readyState === WebSocket.OPEN) {  // Ensure socket is defined
                         socket.send(blob);
                     } else {
                         console.error('WebSocket is not open');
+                        setTimeout(() => sendFrame(blob), 1000);
                     }
                 }, 'image/jpeg', 0.8);
             }

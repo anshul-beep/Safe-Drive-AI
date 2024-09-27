@@ -30,15 +30,15 @@ ALLOWED_HOSTS = [".railway.app"] # http://saas.prod.railway.app
 if DEBUG:
     ALLOWED_HOSTS+=["127.0.0.1",
                     "localhost",
-                    "66b5-14-139-195-211.ngrok-free.app"]
+                    'b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
-    "https://66b5-14-139-195-211.ngrok-free.app"
+    "127.0.0.1:8000",
+    "localhost:8000",
+    'https://b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app'
 ]
 
 # Application definition
@@ -66,6 +66,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     "allauth.account.middleware.AccountMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
