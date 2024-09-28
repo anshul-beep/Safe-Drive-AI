@@ -29,11 +29,39 @@ print('DEBUG',DEBUG,type(DEBUG))
 ALLOWED_HOSTS = [".railway.app"] # http://saas.prod.railway.app
 if DEBUG:
     ALLOWED_HOSTS+=["127.0.0.1",
-                    "localhost"]
+                    "localhost",
+                    'b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
+CORS_ALLOW_ALL_ORIGINS = True
 
+CORS_ALLOW_METHODS = [
+'DELETE',
+'GET',
+'OPTIONS',
+'PATCH',
+'POST',
+'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+'accept',
+'accept-encoding',
+'authorization',
+'content-type',
+'dnt',
+'origin',
+'user-agent',
+'x-csrftoken',
+'x-requested-with',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+    'https://b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app'
+]
 
 # Application definition
 
@@ -45,6 +73,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'detection_app',
+    'channels',
+    'corsheaders',
 
     # Third party apps
     'allauth',
@@ -54,11 +84,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     "allauth.account.middleware.AccountMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
