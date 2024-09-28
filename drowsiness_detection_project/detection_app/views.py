@@ -16,7 +16,6 @@ detector = DrowsinessDetector()
 def index(request):
     return render(request, 'detection_app/index.html')
 
-<<<<<<< HEAD
 def gen_frames():
     camera = cv2.VideoCapture(0)
     while True:
@@ -45,11 +44,6 @@ def gen_frames():
             frame = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-=======
-class DrowsinessConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
->>>>>>> 3c57eab83f857a528a8e0fe3453831cd2b478247
 
     async def disconnect(self, close_code):
         pass
