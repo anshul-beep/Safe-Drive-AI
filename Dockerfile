@@ -50,7 +50,7 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 # Database isn't available during build; run other commands like collectstatic
 RUN python manage.py collectstatic --noinput
 
-ARG PROJ_NAME=" drowsiness_detection_project"
+ARG PROJ_NAME="drowsiness_detection_project"
 
 # Create a bash script to run the Django project
 RUN printf "#!/bin/bash\n" > ./paracord_runner.sh && \
