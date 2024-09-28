@@ -16,34 +16,9 @@ detector = DrowsinessDetector()
 def index(request):
     return render(request, 'detection_app/index.html')
 
-def gen_frames():
-    camera = cv2.VideoCapture(0)
-    while True:
-        success, frame = camera.read()
-        if not success:
-            print("Failed to capture frame")
-            break
-        else:
-            if detection_active:  # Only process frames if detection is active
-                try:
-                    is_drowsy, ear = detector.detect_drowsiness(frame)
-                    if is_drowsy:
-                        cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                    
-                    cv2.putText(frame, f"EAR: {ear:.2f}", (300, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                    
-                    DetectionResult.objects.create(is_drowsy=is_drowsy, ear_value=ear)
-                    
-                except Exception as e:
-                    print(f"Error in frame processing: {e}")
-                    print(traceback.format_exc())
-            
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+class DrowsinessConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
 
     async def disconnect(self, close_code):
         pass
