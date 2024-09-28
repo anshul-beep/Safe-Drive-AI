@@ -9,44 +9,17 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" /> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f0f4f8;
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .card {
-            background-color: #ffffff;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-    </style>
 </head>
 <body class="bg-gray-100 p-6">
     <div class="max-w-7xl mx-auto">
-        <div class="gradient-bg text-white p-8 rounded-lg shadow-lg mb-8">
-            <h1 class="text-4xl font-bold mb-2 text-center">Advanced Drowsiness Detection System</h1>
-            <p class="text-center text-lg">Stay alert, drive safely</p>
-        </div>
+        <h1 class="text-4xl font-bold mb-8 text-indigo-700 text-center">Advanced Drowsiness Detection System</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="card p-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Detection Controls</h2>
-                <label class="flex items-center mb-4 cursor-pointer">
-                    <div class="relative">
-                        <input type="checkbox" id="detectionToggle" class="sr-only" onchange="toggleDetection()">
-                        <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
-                        <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
-                    </div>
-                    <span class="ml-3 text-xl font-medium text-gray-700">Enable Drowsiness Detection</span>
+                <label class="inline-flex items-center mb-4">
+                    <input type="checkbox" id="detectionToggle" class="form-checkbox h-5 w-5 text-indigo-600" onchange="toggleDetection()">
+                    <span class="ml-2 text-xl font-medium text-gray-700">Enable Drowsiness Detection</span>
                 </label>
                 <div id="status" class="text-lg font-semibold text-indigo-600 mb-4">Detection is OFF</div>
                 <div id="alertLevel" class="text-lg font-semibold text-green-600">Alert Level: Normal</div>
@@ -54,43 +27,45 @@
                     <canvas id="alertChart"></canvas>
                 </div>
             </div>
-            <div class="card p-6">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Live Feed</h2>
-                <video id="videoElement" class="w-full h-auto border rounded-lg shadow-md" autoplay></video>
+                <video id="videoElement" class="w-full h-auto border rounded-lg" autoplay></video>
                 <canvas id="canvasElement" style="display:none;"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Current Location</h2>
+                <div id="location" class="text-lg text-gray-700">Fetching your current location...</div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="card p-6">
-                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Current Location</h2>
-                <div id="location" class="text-lg text-gray-700">Fetching your current location...</div>
-            </div>
-            <div class="card p-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Nearby Rest Areas</h2>
                 <div id="nearbyPlaces" class="text-lg text-gray-700">Nearby places to rest: None yet</div>
             </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Map</h2>
+                <div id="map" class="w-full h-96 bg-gray-200 rounded-lg"></div>
+            </div>
         </div>
 
-        <div class="card p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Map</h2>
-            <div id="map" class="w-full h-96 bg-gray-200 rounded-lg shadow-inner"></div>
-        </div>
-
-        <div class="card p-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-2xl font-semibold mb-4 text-indigo-600">Drowsiness Statistics</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-indigo-100 rounded-lg text-center">
+                <div class="p-4 bg-indigo-100 rounded-lg">
                     <h3 class="text-lg font-semibold text-indigo-700">Total Drive Time</h3>
-                    <p id="totalDriveTime" class="text-3xl font-bold text-indigo-800">00:00:00</p>
+                    <p id="totalDriveTime" class="text-2xl font-bold text-indigo-800">00:00:00</p>
                 </div>
-                <div class="p-4 bg-yellow-100 rounded-lg text-center">
+                <div class="p-4 bg-yellow-100 rounded-lg">
                     <h3 class="text-lg font-semibold text-yellow-700">Drowsy Episodes</h3>
-                    <p id="drowsyEpisodes" class="text-3xl font-bold text-yellow-800">0</p>
+                    <p id="drowsyEpisodes" class="text-2xl font-bold text-yellow-800">0</p>
                 </div>
-                <div class="p-4 bg-green-100 rounded-lg text-center">
+                <div class="p-4 bg-green-100 rounded-lg">
                     <h3 class="text-lg font-semibold text-green-700">Average Alertness</h3>
-                    <p id="avgAlertness" class="text-3xl font-bold text-green-800">100%</p>
+                    <p id="avgAlertness" class="text-2xl font-bold text-green-800">100%</p>
                 </div>
             </div>
         </div>
@@ -309,21 +284,6 @@
             initializeChart();
         });
 
-        // Update the toggle switch style
-        const toggle = document.getElementById('detectionToggle');
-        const dot = toggle.nextElementSibling.nextElementSibling;
-
-        toggle.addEventListener('change', function() {
-            if (this.checked) {
-                dot.classList.add('translate-x-6');
-                dot.classList.add('bg-indigo-600');
-            } else {
-                dot.classList.remove('translate-x-6');
-                dot.classList.remove('bg-indigo-600');
-            }
-        });
-
-        // Enhance the chart
         function initializeChart() {
             const ctx = document.getElementById('alertChart').getContext('2d');
             alertChart = new Chart(ctx, {
@@ -333,43 +293,20 @@
                     datasets: [{
                         label: 'Alert Level',
                         data: [],
-                        borderColor: 'rgba(99, 102, 241, 1)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2
                     }]
                 },
                 options: {
-                    responsive: true,
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 1,
-                            ticks: {
-                                callback: function(value) {
-                                    return (value * 100) + '%';
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Alert Level: ' + (context.parsed.y * 100).toFixed(2) + '%';
-                                }
-                            }
+                            max: 1
                         }
                     }
                 }
             });
         }
-
-        // ... (keep the rest of the JavaScript code)
     </script>
 </body>
 </html>

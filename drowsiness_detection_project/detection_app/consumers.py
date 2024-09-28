@@ -1,53 +1,40 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from .drowsiness_detector import DrowsinessDetector
-import base64
 import cv2
 import numpy as np
+from channels.generic.websocket import AsyncWebsocketConsumer
+from .drowsiness_detector import DrowsinessDetector
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DrowsinessConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
+        logger.info("WebSocket connection established")
         self.detector = DrowsinessDetector()
 
     async def disconnect(self, close_code):
-        pass
+        logger.info(f"WebSocket disconnected with code: {close_code}")
 
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        image_data = text_data_json['image']
-
-        # Remove the data URL prefix
-        image_data = image_data.split(',')[1]
-
-        # Decode base64 image
-        image_bytes = base64.b64decode(image_data)
-        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
-        frame = cv2.imdecode(image_array, flags=cv2.IMREAD_COLOR)
-
-        # Process the frame
-        is_drowsy, ear = self.detector.detect_drowsiness(frame)
-
-        if is_drowsy:
+    async def receive(self, text_data=None, bytes_data=None):
+        try:
+            if bytes_data:
+                logger.info(f"Received binary data of length: {len(bytes_data)}")
+                frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+                is_drowsy, ear = self.detector.detect_drowsiness(frame)
+                
+                await self.send(text_data=json.dumps({
+                    'type': 'drowsiness_alert',
+                    'is_drowsy': is_drowsy,
+                    'ear': ear
+                }))
+                logger.info(f"Sent drowsiness data: is_drowsy={is_drowsy}, ear={ear}")
+            elif text_data:
+                logger.info(f"Received text data: {text_data}")
+                # Handle text data if needed
+        except Exception as e:
+            logger.error(f"Error processing data: {str(e)}")
             await self.send(text_data=json.dumps({
-                'type': 'drowsiness_alert',
-                'is_drowsy': is_drowsy,
-                'ear': ear
+                'type': 'error',
+                'message': str(e)
             }))
-
-
-# consumers.py
-from channels.generic.websocket import AsyncWebsocketConsumer
-import json
-
-class TestConsumer(AsyncWebsocketConsumer):
-    async def connect(self):
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        pass
-
-    async def receive(self, text_data):
-        await self.send(text_data=json.dumps({
-            'message': 'Hello WebSocket!',
-        }))

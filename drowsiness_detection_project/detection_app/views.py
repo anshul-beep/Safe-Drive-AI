@@ -36,14 +36,15 @@ class DrowsinessConsumer(AsyncWebsocketConsumer):
         frame = cv2.imdecode(image_array, flags=cv2.IMREAD_COLOR)
 
         # Process the frame
-        is_drowsy, ear = detector.detect_drowsiness(frame)
-
-        if is_drowsy:
-            await self.send(text_data=json.dumps({
-                'type': 'drowsiness_alert',
-                'is_drowsy': is_drowsy,
-                'ear': ear
-            }))
+        # is_drowsy, ear = detector.detect_drowsiness(frame)
+        is_drowsy=True
+        ear = 0.3
+    
+        await self.send(text_data=json.dumps({
+            'type': 'drowsiness_alert',
+            'is_drowsy': is_drowsy,
+            'ear': ear
+        }))
 
         # Save result to database
         DetectionResult.objects.create(is_drowsy=is_drowsy, ear_value=ear)
