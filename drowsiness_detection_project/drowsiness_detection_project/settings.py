@@ -26,11 +26,10 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DJANGO_DEBUG', cast= bool)
 print('DEBUG',DEBUG,type(DEBUG))
-ALLOWED_HOSTS = [".railway.app"] # http://saas.prod.railway.app
+ALLOWED_HOSTS = [".railway.app","safe-drive-ai-437013.et.r.appspot.com"] # http://saas.prod.railway.app
 if DEBUG:
     ALLOWED_HOSTS+=["127.0.0.1",
-                    "localhost",
-                    'b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app']
+                    "localhost",]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
