@@ -10,3 +10,4 @@ dlib==19.24.2
 scipy
 python-decouple
 pygame
+django-cors-headers
