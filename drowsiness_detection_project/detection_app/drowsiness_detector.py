@@ -4,7 +4,10 @@ import numpy as np
 from scipy.spatial import distance
 import os
 from django.conf import settings
-import pygame  # For sound alerts on Windows
+import pygame
+import logging
+
+logger = logging.getLogger(__name__)
 
 def eye_aspect_ratio(eye):
     A = distance.euclidean(eye[1], eye[5])
@@ -20,41 +23,37 @@ class DrowsinessDetector:
         if not os.path.exists(predictor_path):
             raise FileNotFoundError(f"Predictor file not found at {predictor_path}")
         self.predictor = dlib.shape_predictor(predictor_path)
-        self.EYE_AR_THRESH = 0.25  # Adjusted for sensitivity
-        self.EYE_AR_CONSEC_FRAMES = 15  # Reduced for quicker alerts
-        self.COUNTER = 0
-        self.ALARM_ON = False
+        self.EYE_AR_THRESH = 0.25
+        pygame.mixer.init()
 
     def detect_drowsiness(self, frame):
-        if frame is None or frame.size == 0:
-            print("Empty frame received")
+        logger.info(f"Received frame: type={type(frame)}, shape={frame.shape if hasattr(frame, 'shape') else 'N/A'}")
+        if frame is None or not hasattr(frame, 'size') or frame.size == 0:
+            logger.warning("Empty or invalid frame received")
             return False, 0.0
 
-        print(f"Original frame shape: {frame.shape}, dtype: {frame.dtype}")
-
-        # Convert to RGB (dlib expects RGB)
         if len(frame.shape) == 3 and frame.shape[2] == 3:
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         else:
-            print(f"Unexpected frame format: shape {frame.shape}")
+            logger.warning(f"Unexpected frame format: shape {frame.shape}")
             return False, 0.0
 
-        # Ensure the image is 8-bit
         if rgb_frame.dtype != np.uint8:
             rgb_frame = (rgb_frame * 255).astype(np.uint8)
 
-        # Resize the frame for faster processing
         height, width = rgb_frame.shape[:2]
         if width > 320:
-            scaling_factor = 300.0 / width
+            scaling_factor = 320.0 / width
             rgb_frame = cv2.resize(rgb_frame, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
-        # Detect faces in the RGB frame
         try:
             faces = self.detector(rgb_frame, 0)
-            print(f"Detected {len(faces)} faces")
+            logger.info(f"Detected {len(faces)} faces")
+            if len(faces) == 0:
+                logger.info("No faces detected in this frame")
+                return False, 0.0
         except Exception as e:
-            print(f"Error in face detection: {e}")
+            logger.error(f"Error in face detection: {e}")
             return False, 0.0
 
         for face in faces:
@@ -68,28 +67,25 @@ class DrowsinessDetector:
                 right_ear = eye_aspect_ratio(right_eye)
 
                 ear = (left_ear + right_ear) / 2.0
+                logger.info(f"Left EAR: {left_ear}, Right EAR: {right_ear}, Average EAR: {ear}")
 
-                # Drowsiness detection logic
                 if ear < self.EYE_AR_THRESH:
-                    self.COUNTER += 1
-                    if self.COUNTER >= self.EYE_AR_CONSEC_FRAMES:
-                        self.ALARM_ON = True
-                        self.alert()
-                        return True, ear
+                    logger.info(f"Drowsiness detected! EAR: {ear}")
+                    self.alert()
+                    return True, ear
                 else:
-                    self.COUNTER = 0
-                    self.ALARM_ON = False
-            except Exception as e:
-                print(f"Error in landmark detection or EAR calculation: {e}")
+                    logger.info(f"EAR above threshold: {ear}")
 
-        return False, ear if 'ear' in locals() else 0.0
+            except Exception as e:
+                logger.error(f"Error in landmark detection or EAR calculation: {e}")
+
+        return False, ear
 
     def alert(self):
-        # Visual alert in the frame (this should be done in the view, not here)
-        print("Drowsiness detected! Activating alarm...")
+        logger.info("Drowsiness detected! Activating alarm...")
         try:
-            pygame.mixer.music.load('models\Alert (1).wav') 
+            pygame.mixer.music.load(os.path.join(settings.BASE_DIR, 'models/Alert (1).wav'))
             pygame.mixer.music.play()
+            logger.info("Alert sound played.")
         except Exception as e:
-            print(f"Error playing sound: {e}")
-
+            logger.error(f"Error playing sound: {e}")
