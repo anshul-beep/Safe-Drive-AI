@@ -50,7 +50,7 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 ENV PORT ${PORT:-8000}
 
 # Database isn't available during build; run other commands like collectstatic
-RUN python manage.py collectstatic --noinput
+# RUN python manage.py collectstatic --noinput
 
 ARG PROJ_NAME="drowsiness_detection_project"
 
