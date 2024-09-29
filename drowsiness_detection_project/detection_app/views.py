@@ -24,30 +24,44 @@ class DrowsinessConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        image_data = text_data_json['image']
+        try:
+            text_data_json = json.loads(text_data)
+            image_data = text_data_json['image']
 
-        # Remove the data URL prefix
-        image_data = image_data.split(',')[1]
+            # Remove the data URL prefix and decode base64 image
+            image_data = image_data.split(',')[1]
+            image_bytes = base64.b64decode(image_data)
+            image_array = np.frombuffer(image_bytes, dtype=np.uint8)
+            frame = cv2.imdecode(image_array, flags=cv2.IMREAD_COLOR)
 
-        # Decode base64 image
-        image_bytes = base64.b64decode(image_data)
-        image_array = np.frombuffer(image_bytes, dtype=np.uint8)
-        frame = cv2.imdecode(image_array, flags=cv2.IMREAD_COLOR)
+            # Process the frame
+            is_drowsy = True
+            ear = 0.3
 
-        # Process the frame
-        # is_drowsy, ear = detector.detect_drowsiness(frame)
-        is_drowsy=True
-        ear = 0.3
-    
-        await self.send(text_data=json.dumps({
-            'type': 'drowsiness_alert',
-            'is_drowsy': is_drowsy,
-            'ear': ear
-        }))
+            await self.send(text_data=json.dumps({
+                'type': 'drowsiness_alert',
+                'is_drowsy': is_drowsy,
+                'ear': ear
+            }))
 
-        # Save result to database
-        DetectionResult.objects.create(is_drowsy=is_drowsy, ear_value=ear)
+            # Save result to database
+            DetectionResult.objects.create(is_drowsy=is_drowsy, ear_value=ear)
+
+            # Clear image-related data to free memory
+            del frame
+            del image_bytes
+            del image_array
+
+        except Exception as e:
+            await self.send(text_data=json.dumps({
+                'type': 'error',
+                'message': str(e)
+            }))
+            # Ensure memory is still cleared even in case of an exception
+            del frame
+            del image_bytes
+            del image_array
+
 
 @csrf_exempt
 def toggle_detection(request):

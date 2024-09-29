@@ -27,7 +27,7 @@ SECRET_KEY = config('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DJANGO_DEBUG', cast= bool)
 print('DEBUG',DEBUG,type(DEBUG))
-ALLOWED_HOSTS = [".railway.app","safe-drive-ai-437013.et.r.appspot.com"] # http://saas.prod.railway.app
+ALLOWED_HOSTS = [".railway.app",".appspot.com"] # http://saas.prod.railway.app
 if DEBUG:
     ALLOWED_HOSTS+=["127.0.0.1",
                     "localhost",]
@@ -60,7 +60,6 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    'https://b587-2a09-bac1-3680-60-00-19b-147.ngrok-free.app'
 ]
 
 # Application definition
@@ -114,13 +113,19 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = 'drowsiness_detection_project.asgi.application'
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+#         },
+#     },
+# }
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-        },
-    },
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
 }
 
 WSGI_APPLICATION = 'drowsiness_detection_project.wsgi.application'
@@ -185,12 +190,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-import os
+STATIC_URL = 'static/'
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
