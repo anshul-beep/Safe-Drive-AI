@@ -4,7 +4,7 @@ runtime: python39
 entrypoint: daphne -b :$PORT drowsiness_detection_project.drowsiness_detection_project.asgi:application
 
 env_variables:
-  DJANGO_SETTINGS_MODULE: "drowsiness_detection_project.settings"
+  DJANGO_SETTINGS_MODULE: "drowisness_detection_project.drowsiness_detection_project.settings"
   PYTHONPATH: "/app/drowsiness_detection_project"
   SECRET_KEY: 'django-insecure-u@#-(r96itdxydn(62-4*-!o$pe(3fg*#ncnyf2exsq_%78d)w'
   DEBUG: 'False'
