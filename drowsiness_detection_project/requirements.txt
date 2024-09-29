@@ -15,4 +15,5 @@ scipy
 python-decouple
 pygame==2.6.0 
 django-cors-headers
+psutil
 

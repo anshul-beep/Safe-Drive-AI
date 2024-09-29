@@ -15,4 +15,5 @@ scipy
 python-decouple
 pygame
 django-cors-headers
+psutil
 
